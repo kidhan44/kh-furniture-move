@@ -35,13 +35,34 @@
 .move-notice{color:var(--notice-red);font-weight:700;margin:10px 0 16px}
 @media(max-width:600px){.unit-choices{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media print{.print-photo{width:95px;height:72px}.print tr{break-inside:avoid}.print-page{break-after:page;page-break-after:always}.print-page:last-child{break-after:auto;page-break-after:auto}.move-notice{color:#c62828!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-</style></head><body><header><div><small>高雄訓練處 · 搬運作業</small><h1>桌椅及物品搬運登記</h1></div></header><main>
+
+body.locked header,body.locked main{display:none}
+#gate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:var(--paper);z-index:50}
+body.locked #gate{display:flex}
+#gate form{width:100%;max-width:360px;background:var(--white);border:1px solid var(--line);border-radius:12px;padding:26px;box-shadow:var(--shadow);text-align:center}
+#gate h2{margin-bottom:4px}#gate p{color:var(--muted);font-size:14px}#gate input{margin:14px 0 6px;text-align:center;font-size:18px;letter-spacing:.2em}#gate .error{min-height:22px;margin:0 0 10px}#gate button{width:100%}
+@media print{#gate{display:none!important}}
+</style></head><body class="locked"><div id="gate"><form id="gateForm"><small>高雄訓練處 · 搬運作業</small><h2>請輸入密碼</h2><p>進入桌椅搬運登記系統</p><input id="gatePw" type="password" inputmode="numeric" autocomplete="off" aria-label="密碼" required><p id="gateErr" class="error" role="alert"></p><button class="primary" type="submit">進入</button></form></div><header><div><small>高雄訓練處 · 搬運作業</small><h1>桌椅及物品搬運登記</h1></div></header><main>
 <section class="intro"><div><h2>確認領取明細</h2><p class="arrival-notice">搬運前請先到15樓找講師報到</p></div></section>
 <section class="card"><h2>開放搬運時間</h2><div class="times"><span class="tag">12 / 20（日）11:10–14:00</span><span class="tag">12 / 21（一）至 12 / 22（二）09:00–16:00（12:00–13:00 不開放）</span></div><p class="muted">高暉單位「鐵製3人桌」另開放 12 / 24 16:00–17:00，以及 12 / 28 至 12 / 29 09:00–16:00（12:00–13:00 不開放）。</p><p class="muted">日期為 2026 年；請於上述時段內安排搬運。</p></section>
 <div class="status" id="status" role="status">連線共用資料庫中…</div>
 <section class="card"><h2>單位與可搬運數量</h2><p class="quota-warning"><strong>若各單位登記未達之前統計數量，則後續將不予保留，一律由廠商搬運。</strong></p><p class="move-notice">搬運物品眾多，講師人力也有限，若實際搬運數量和登記數量有些出入，還請多包涵_畢竟是免費的，笑一笑就好！</p><div class="unit-selection"><p id="unitLabel"><strong>選擇單位</strong></p><input id="unit" type="hidden" value=""><div id="unitChoices" class="unit-choices" role="group" aria-labelledby="unitLabel"></div><p id="quotaHint" class="muted">點選單位後，顯示各品項可搬運數量與剩餘數量。</p></div><div id="quota" class="quota"></div></section>
 <section class="card"><h2>新增登記</h2><p class="muted">每個批次分別填寫登記人、搬運者及品項，並各自儲存。</p><p class="move-notice">搬運物品眾多，講師人力也有限，若實際搬運數量和登記數量有些出入，還請多包涵_畢竟是免費的，笑一笑就好！</p><div id="batches"></div><div class="actions"><button type="button" class="secondary" id="addBatch">＋ 新增搬運批次</button></div></section>
 <section class="card"><h2>單位登記紀錄<span class="records-print-note">(由講師列印，您不須列印)</span></h2><p class="muted">點選單位名稱即可展開或收合紀錄；可逐筆勾選或全選同單位紀錄，一次列印或另存為 PDF。</p><div id="records"></div></section></main><dialog id="photoDialog" class="photo-dialog"><form method="dialog"><button type="submit" class="secondary">關閉</button></form><img alt=""><p></p></dialog><section class="print" id="print"></section>
+<script>
+(function(){
+  const HASH='b5b6977c65cd29159c9ee6ba483992d8ec8784d304513aba17c2bdda4f0779c2',KEY='kh-moving-unlocked';
+  const unlock=()=>document.body.classList.remove('locked');
+  try{if(sessionStorage.getItem(KEY)===HASH){unlock();return}}catch(e){}
+  const hex=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+  document.getElementById('gateForm').onsubmit=async e=>{
+    e.preventDefault();const input=document.getElementById('gatePw'),err=document.getElementById('gateErr');
+    if(await hex(input.value.trim())===HASH){try{sessionStorage.setItem(KEY,HASH)}catch(x){}unlock()}
+    else{err.textContent='密碼錯誤，請再試一次。';input.value='';input.focus()}
+  };
+  document.getElementById('gatePw').focus();
+})();
+</script>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
 import {getFirestore,collection,doc,onSnapshot,runTransaction,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
